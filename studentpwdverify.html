@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priority Verification - CM QueueHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        /* Exact styles from your working verify.html/visitor.html */
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+        body { min-height:100vh; display:flex; justify-content:center; align-items:center; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background2.jpg') no-repeat center center/cover; padding: 20px; }
+        .container { text-align:center; background:rgba(255,255,255,0.15); backdrop-filter:blur(15px); padding:40px; border-radius:20px; width:90%; max-width:450px; box-shadow:0 10px 30px rgba(0,0,0,0.3); color: white; }
+        #qr-reader { width: 100%; margin: 20px 0; border-radius: 10px; overflow: hidden; background: white; }
+        .back-btn { margin-top:15px; display:block; color:#a8e6a3; text-decoration:none; padding:10px 20px; border:2px solid rgba(168,230,163,0.5); border-radius:25px; transition:0.3s; cursor: pointer; background: transparent; border: none; font-size: 14px;}
+        .back-btn:hover { background:rgba(168,230,163,0.2); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>♿ Priority Scan</h1>
+    <p>Please scan your PWD or Senior Citizen ID</p>
+    <div id="qr-reader"></div>
+    <button class="back-btn" onclick="window.location.href='home.html'">← Back to Queue</button>
+</div>
+
+<script>
+    const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    
+    function onScanSuccess(decodedText) {
+        const data = decodedText.toUpperCase().trim();
+        
+        // Strict PWD/Senior verification logic
+        const isPriority = /PWD|SENIOR|SR|DISABILITY/i.test(data);
+        
+        if (!isPriority) {
+            alert("❌ Invalid ID: This is not a PWD or Senior Citizen ID card.");
+            return;
+        }
+
+        // Store success state
+        sessionStorage.setItem("security_scanned_id", data);
+        sessionStorage.setItem("security_is_priority", "true");
+        
+        html5QrcodeScanner.clear().then(() => {
+            window.location.href = "student-service.html?status=verified";
+        });
+    }
+
+    html5QrcodeScanner.render(onScanSuccess);
+</script>
+</body>
+</html>

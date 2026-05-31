@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QueueHub - Security ID Check</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: linear-gradient(rgba(15, 32, 67, 0.65), rgba(15, 32, 67, 0.85)), url('background2.jpg') no-repeat center center/cover;
+            padding: 20px;
+        }
+        .scanner-card {
+            background: rgba(255, 255, 255, 0.95);
+            max-width: 500px; width: 100%; padding: 35px 25px;
+            border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            text-align: center; backdrop-filter: blur(10px);
+        }
+        h2 { color: #0f2043; font-size: 24px; margin-bottom: 12px; }
+        p { color: #55637d; font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
+        .status-banner {
+            width: 100%; padding: 12px; border-radius: 10px;
+            background: #e2e8f0; color: #4a5568; font-weight: 600; font-size: 14px;
+            margin-bottom: 20px; transition: all 0.3s ease; border: 2px solid transparent;
+        }
+        .status-banner.error { background: #fed7d7 !important; color: #c53030 !important; border-color: #fc8181 !important; }
+        .status-banner.success { background: #c6f6d5 !important; color: #22543d !important; border-color: #68d391 !important; }
+        #qr-reader { width: 100%; border: none !important; border-radius: 14px; overflow: hidden; background: #000; }
+        #qr-reader button { background-color: #0f2043 !important; color: white !important; border: none !important; padding: 12px 24px !important; border-radius: 8px !important; cursor: pointer !important; margin-top: 15px !important; }
+        
+        .manual-entry-wrap { margin-top: 20px; padding-top: 20px; border-top: 1px dashed #cbd5e1; text-align: left; }
+        .manual-label { font-size: 12px; font-weight: 600; color: #4a5568; display: block; margin-bottom: 6px; }
+        .input-row { display: flex; gap: 8px; }
+        .manual-input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+        .manual-btn { background: #0f2043; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .cancel-btn { display: inline-block; margin-top: 25px; color: #8898aa; text-decoration: none; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div class="scanner-card">
+        <h2>🔒 Mandated ID Security Scan</h2>
+        <p>Scan your card's barcode, or use the verified ID serial option below to authenticate your profile.</p>
+        
+        <div id="statusBanner" class="status-banner">📷 Waiting for physical ID card...</div>
+        <div id="qr-reader"></div>
+        
+        <div class="manual-entry-wrap">
+            <label class="manual-label" for="manualIdInput">💳 Driver's License / ID Serial Fallback</label>
+            <div class="input-row">
+                <input type="text" id="manualIdInput" class="manual-input" placeholder="e.g., N01-12345678">
+                <button class="manual-btn" onclick="processManualVerification()">Verify ID</button>
+            </div>
+        </div>
+
+        <a href="home.html" class="cancel-btn">← Abort Verification</a>
+    </div>
+
+    <script>
+        const scannerConfig = { 
+            fps: 24, 
+            qrbox: { width: 320, height: 150 },
+            rememberLastUsedCamera: true,
+            // Force use of rear camera on mobile devices
+            videoConstraints: { facingMode: "environment" },
+            formatsToSupport: [ 
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128, 
+                Html5QrcodeSupportedFormats.CODE_39
+            ]
+        };
+
+        const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", scannerConfig, false);
+        const banner = document.getElementById("statusBanner");
+
+        function executeVerificationPipeline(rawIDString) {
+            const cleanCode = rawIDString.toUpperCase().trim();
+            const isPriority =
+    /^PWD[-\s]?\d+/i.test(cleanCode) ||
+    /^SC[-\s]?\d+/i.test(cleanCode) ||
+    /^SENIOR[-\s]?\d+/i.test(cleanCode);
+
+            banner.className = "status-banner success";
+            banner.innerText = isPriority ? "♿ PRIORITY PROFILE VALIDATED! Redirecting..." : "📋 VISITOR ID VERIFIED! Redirecting...";
+
+            sessionStorage.setItem("security_scanned_id", cleanCode.substring(0, 30));
+            sessionStorage.setItem("security_is_priority", isPriority ? "true" : "false");
+
+            try { html5QrcodeScanner.clear(); } catch(e) {}
+
+            setTimeout(() => {
+                const targetPage = sessionStorage.getItem("scan_source_page") || "visitor-service.html";
+                window.location.href = `${targetPage}?status=verified`;
+            }, 1200);
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            executeVerificationPipeline(decodedText);
+        }
+
+        function onScanFailure(error) {}
+
+        window.processManualVerification = function() {
+            const customInput = document.getElementById("manualIdInput").value.trim();
+            
+            // 🛡️ STRICT VALIDATION: Blocks gibberish
+            const isValidFormat = /^[A-Z0-9-]{6,15}$/i.test(customInput) && /[0-9-]/.test(customInput);
+
+            if(!customInput || !isValidFormat) {
+                banner.className = "status-banner error";
+                banner.innerText = "❌ INVALID FORMAT: Please enter a valid ID serial.";
+                return;
+            }
+            
+            executeVerificationPipeline(customInput);
+        };
+
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    </script>
+</body>
+</html>

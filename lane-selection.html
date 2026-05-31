@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lane Selection | CM QueueHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+        body { 
+            min-height:100vh; display:flex; justify-content:center; align-items:center; 
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background2.jpg') no-repeat center center/cover;
+            padding: 20px;
+        }
+        .container { 
+            text-align:center; background:rgba(255,255,255,0.05); 
+            backdrop-filter:blur(20px); border: 1px solid rgba(255,255,255,0.1);
+            padding: 50px 30px; border-radius: 30px; width:90%; max-width:450px; 
+            box-shadow:0 25px 50px rgba(0,0,0,0.3); color: white;
+        }
+        h1 { font-size: 28px; margin-bottom: 10px; background: linear-gradient(to right, #fff, #a8e6a3); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { color: rgba(255,255,255,0.7); margin-bottom: 30px; font-weight: 300; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 15px; }
+        button { 
+            width: 100%; padding: 18px; border: none; border-radius: 16px; 
+            font-size: 16px; cursor: pointer; transition: 0.4s; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        
+        .reg-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .reg-btn:hover { background: #0284c7; border-color: #0284c7; transform: translateY(-5px); box-shadow: 0 10px 20px rgba(2, 132, 199, 0.3); }
+        
+        .pwd-btn { background: rgba(255, 215, 0, 0.15); color: #ffd700; border: 1px solid rgba(255, 215, 0, 0.3); }
+        .pwd-btn:hover { background: #ffd700; color: #000; transform: translateY(-5px); box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3); }
+
+        .back-btn { margin-top: 30px; background: none; color: rgba(255,255,255,0.5); font-size: 14px; text-decoration: underline; }
+        .back-btn:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Select Lane</h1>
+    <p>Please choose the lane that applies to your visit.</p>
+    
+    <div class="btn-group">
+        <button class="reg-btn" onclick="selectLane('regular')">
+            <span>👤</span> Regular Processing
+        </button>
+        <button class="pwd-btn" onclick="selectLane('pwd')">
+            <span>♿</span> PWD / Elderly Priority
+        </button>
+    </div>
+    
+    <button class="back-btn" onclick="window.location.href='home.html'">← Back to Home</button>
+</div>
+
+<script>
+    function selectLane(type) {
+        // "Stamp" the browser permit
+        sessionStorage.setItem("lane_selected", "true");
+        
+        if (type === 'regular') {
+            window.location.href = "student-service.html";
+        } else {
+            window.location.href = "studentpwdverify.html";
+        }
+    }
+</script>
+</body>
+</html>
